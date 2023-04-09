@@ -77,7 +77,8 @@ class Sampler_FastGCN(Sampler):
         p1 = p1 / np.sum(p1)
         sampled = np.random.choice(np.array(np.arange(np.size(neis))),
                                    output_size, True, p1)
-
+        #print("sampled size: " , len(sampled))
+        #print("output_size: " , output_size)
         u_sampled = neis[sampled]
         support = support[:, u_sampled]
         sampled_p1 = p1[sampled]

@@ -37,7 +37,7 @@ def get_args():
                         help='Number of hidden units.')
     parser.add_argument('--dropout', type=float, default=0.0,
                         help='Dropout rate (1 - keep probability).')
-    parser.add_argument('--batchsize', type=int, default=256,
+    parser.add_argument('--batchsize', type=int, default=512,
                         help='batchsize for train')
     args = parser.parse_args()
     args.cuda = not args.no_cuda and torch.cuda.is_available()
@@ -78,8 +78,8 @@ if __name__ == '__main__':
     args = get_args()
     adj, features, adj_train, train_features, y_train, y_test, test_index = \
         load_data(args.dataset)
-
-    layer_sizes = [128, 128]
+    
+    layer_sizes = [1024, 1024]
     input_dim = features.shape[1]
     train_nums = adj_train.shape[0]
     test_gap = args.test_gap
@@ -151,3 +151,13 @@ if __name__ == '__main__':
               f"test_loss: {test_loss:.3f}, "
               f"test_acc: {test_acc:.3f}, "
               f"test_times: {test_time:.3f}s")
+    
+    torch.save(model.state_dict(), "fastGCN.pt")
+    model = GCN(nfeat=features.shape[1],
+                nhid=args.hidden,
+                nclass=nclass,
+                dropout=args.dropout,
+                sampler=sampler).to(device)
+    model.load_state_dict(torch.load("fastGCN.pt"))
+    model.eval()
+
