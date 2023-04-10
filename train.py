@@ -10,7 +10,7 @@ from models import GCN
 from sampler import Sampler_FastGCN, Sampler_ASGCN
 from utils import load_data, get_batches, accuracy
 from utils import sparse_mx_to_torch_sparse_tensor
-
+from sklearn.metrics import f1_score
 
 def get_args():
     # Training settings
@@ -37,7 +37,7 @@ def get_args():
                         help='Number of hidden units.')
     parser.add_argument('--dropout', type=float, default=0.0,
                         help='Dropout rate (1 - keep probability).')
-    parser.add_argument('--batchsize', type=int, default=512,
+    parser.add_argument('--batchsize', type=int, default=2048,
                         help='batchsize for train')
     args = parser.parse_args()
     args.cuda = not args.no_cuda and torch.cuda.is_available()
@@ -69,8 +69,9 @@ def test(test_adj, test_feats, test_labels, epoch):
     outputs = model(test_feats, test_adj)
     loss_test = loss_fn(outputs, test_labels)
     acc_test = accuracy(outputs, test_labels)
-
-    return loss_test.item(), acc_test.item(), time.time() - t
+    preds = outputs.max(1)[1].type_as(test_labels)
+    f1_test = f1_score(preds, test_labels, average='macro')
+    return loss_test.item(), acc_test.item(), f1_test.item(), time.time() - t
 
 
 if __name__ == '__main__':
@@ -140,19 +141,21 @@ if __name__ == '__main__':
                                                   y_train,
                                                   args.batchsize,
                                                   test_gap)
-        test_loss, test_acc, test_time = test(test_adj,
+        test_loss, test_acc, test_f1, test_time = test(test_adj,
                                               test_feats,
                                               test_labels,
                                               args.epochs)
-        print(f"epchs:{epochs * test_gap}~{(epochs + 1) * test_gap - 1} "
+        print(f"epochs:{epochs * test_gap}~{(epochs + 1) * test_gap - 1} "
               f"train_loss: {train_loss:.3f}, "
               f"train_acc: {train_acc:.3f}, "
               f"train_times: {train_time:.3f}s "
               f"test_loss: {test_loss:.3f}, "
               f"test_acc: {test_acc:.3f}, "
+              f"test_f1: {test_f1:.3f}, "
               f"test_times: {test_time:.3f}s")
     
     torch.save(model.state_dict(), "fastGCN.pt")
+'''
     model = GCN(nfeat=features.shape[1],
                 nhid=args.hidden,
                 nclass=nclass,
@@ -160,4 +163,5 @@ if __name__ == '__main__':
                 sampler=sampler).to(device)
     model.load_state_dict(torch.load("fastGCN.pt"))
     model.eval()
+'''
 

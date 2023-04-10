@@ -165,6 +165,11 @@ def accuracy(output, labels):
     correct = correct.sum()
     return correct / len(labels)
 
+def f1(output, labels):
+    preds = output.max(1)[1].type_as(labels)
+    correct = preds.eq(labels).double()
+    correct = correct.sum()
+    return correct / len(labels)
 
 def sparse_mx_to_torch_sparse_tensor(sparse_mx):
     """Convert a scipy sparse matrix to a torch sparse tensor."""
